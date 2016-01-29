@@ -455,4 +455,4 @@
         $.ss.eventSource.onmessage = onMessage;
     };
 
-})(window.jQuery);
+})(jQuery);
