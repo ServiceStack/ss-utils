@@ -5,24 +5,24 @@
 
 /// <reference path="../jquery/jquery.d.ts" />
 
-interface JQuery {
-    setFieldError: (name: string, msg: string) => void;
-    serializeMap: () => { [index: string]: any };
-    applyErrors: (status: ssutils.ResponseStatus, opt?: ssutils.ApplyErrorsOptions) => JQuery;
-    clearErrors: () => JQuery;
-    bindForm: (opt?: ssutils.ApplyErrorsOptions) => JQuery;
-    applyValues: (values: { [index: string]: string }) => JQuery;
-    bindHandlers: (handlers: { [index: string]: Function }) => JQuery;
-    setActiveLinks: () => JQuery;
-    handleServerEvents: (opt?: ssutils.HandleServerEventsOptions) => void;
-}
+declare module SSUtils {
 
-interface JQueryStatic {
-    ss: ssutils.Static;
-}
+    interface JQuery {
+        setFieldError: (name: string, msg: string) => void;
+        serializeMap: () => { [index: string]: any };
+        applyErrors: (status: ResponseStatus, opt?: ApplyErrorsOptions) => JQuery;
+        clearErrors: () => JQuery;
+        bindForm: (opt?: ApplyErrorsOptions) => JQuery;
+        applyValues: (values: { [index: string]: string }) => JQuery;
+        bindHandlers: (handlers: { [index: string]: Function }) => JQuery;
+        setActiveLinks: () => JQuery;
+        handleServerEvents: (opt?: HandleServerEventsOptions) => void;
+    }
 
-declare module ssutils 
-{
+    interface JQueryStatic {
+        ss: Static;
+    }
+
     interface Static {
         handlers: { [index: string]: Function };
         onSubmitDisable: string;
@@ -96,11 +96,11 @@ declare module ssutils
         channels: string;
         profileUrl: string;
     }
-    
+
     interface SSEHeartbeat extends SSECommand { }
     interface SSEJoin extends SSECommand { }
     interface SSELeave extends SSECommand { }
-    
+
     interface SSEConnect extends SSECommand {
         id: string;
         unRegisterUrl: string;
@@ -114,6 +114,9 @@ declare module ssutils
         onerror?: (...args: any[]) => void;
         onmessage?: (...args: any[]) => void;
         errorArgs: any[];
-    }
+    }    
 }
 
+declare module "ssutils" {
+    export = SSUtils;
+}

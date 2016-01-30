@@ -1,29 +1,14 @@
-// Based off https://github.com/ForbesLindesay/umd/blob/master/template.js
-;(function(f) {
-  // CommonJS
-  if (typeof exports === "object" && typeof module !== "undefined") {
-    module.exports = f(require('jquery'));
-  // RequireJS
-  } else if (typeof define === "function" && define.amd) {
-    define(['jquery'], f);
-  // <script>
-  } else {
-    var g
-    if (typeof window !== "undefined") {
-      g = window;
-    } else if (typeof global !== "undefined") {
-      g = global;
-    } else if (typeof self !== "undefined") {
-      g = self;
-    } else {
-      // works providing we're not in "use strict";
-      // needed for Java 8 Nashorn
-      // see https://github.com/facebook/react/issues/3037
-      g = this;
-    }
-    g.jQuery = f(g.jQuery);
-  }
-})(function ($) {
+// from: https://github.com/ForbesLindesay/umd/blob/master/template.js
+;(function(root, f) {
+	if (typeof define === "function" && define.amd) {
+		// AMD. Register as an anonymous module.
+		define(["jquery"], f);
+	} else if (typeof exports === "object") {
+		module.exports = f(require("jquery"));
+	} else {
+		f(root.jQuery);
+	}
+})(this, function($, undefined) {
 
     if (!$.ss) $.ss = {};
     $.ss.handlers = {};
