@@ -1,14 +1,13 @@
-// from: https://github.com/ForbesLindesay/umd/blob/master/template.js
-;(function(root, f) {
-	if (typeof define === "function" && define.amd) {
-		// AMD. Register as an anonymous module.
-		define(["jquery"], f);
-	} else if (typeof exports === "object") {
-		module.exports = f(require("jquery"));
-	} else {
-		f(root.jQuery);
-	}
-})(this, function($, undefined) {
+;(function (root, f) {
+    if (typeof define === "function" && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(["jquery"], f);
+    } else if (typeof exports === "object") {
+        module.exports = f(require("jquery"));
+    } else {
+        f(root.jQuery);
+    }
+})(this, function ($) {
 
     if (!$.ss) $.ss = {};
     $.ss.handlers = {};
@@ -27,12 +26,12 @@
                 : errorMsg || splitCase(errorCode);
         }
     };
-    $.ss.clearAdjacentError = function() {
+    $.ss.clearAdjacentError = function () {
         $(this).removeClass("error");
         $(this).prev(".help-inline,.help-block").removeClass("error").html("");
         $(this).next(".help-inline,.help-block").removeClass("error").html("");
     };
-    $.ss.todate = function(s) { return new Date(parseFloat(/Date\(([^)]+)\)/.exec(s)[1])); };
+    $.ss.todate = function (s) { return new Date(parseFloat(/Date\(([^)]+)\)/.exec(s)[1])); };
     $.ss.todfmt = function (s) { return $.ss.dfmt($.ss.todate(s)); };
     function pad(d) { return d < 10 ? '0' + d : d; };
     $.ss.dfmt = function (d) { return d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate()); };
@@ -46,7 +45,7 @@
             : document.selection && document.selection.type != "Control"
                 ? document.selection.createRange().text : "";
     };
-    $.ss.queryString = function(url) {
+    $.ss.queryString = function (url) {
         if (!url) return {};
         var pairs = $.ss.splitOnFirst(url, '?')[1].split('&');
         var map = {};
@@ -58,14 +57,14 @@
         }
         return map;
     };
-    $.ss.bindAll = function(o) {
+    $.ss.bindAll = function (o) {
         for (var k in o) {
             if (typeof o[k] == 'function')
                 o[k] = o[k].bind(o);
         }
         return o;
     };
-    $.ss.createUrl = function(route, args) {
+    $.ss.createUrl = function (route, args) {
         if (!args) args = {};
         var argKeys = {};
         for (var k in args) {
@@ -90,9 +89,9 @@
     };
 
     function splitCase(t) {
-        return typeof t != 'string' ? t : t.replace( /([A-Z]|[0-9]+)/g , ' $1').replace( /_/g , ' ');
+        return typeof t != 'string' ? t : t.replace(/([A-Z]|[0-9]+)/g, ' $1').replace(/_/g, ' ');
     };
-    $.ss.humanize = function(s) { return !s || s.indexOf(' ') >= 0 ? s : splitCase(s); };
+    $.ss.humanize = function (s) { return !s || s.indexOf(' ') >= 0 ? s : splitCase(s); };
 
     function toCamelCase(key) {
         return !key ? key : key.charAt(0).toLowerCase() + key.substring(1);
@@ -105,7 +104,7 @@
         for (var k in status)
             to[toCamelCase(k)] = status[k];
         to.errors = [];
-        $.each(status.Errors || [], function(i, o) {
+        $.each(status.Errors || [], function (i, o) {
             var err = {};
             for (var k in o)
                 err[toCamelCase(k)] = o[k];
@@ -114,7 +113,7 @@
         return to;
     }
 
-    $.ss.parseResponseStatus = function(json, defaultMsg) {
+    $.ss.parseResponseStatus = function (json, defaultMsg) {
         try {
             var err = JSON.parse(json);
             return sanitize(err.ResponseStatus || err.responseStatus);
@@ -126,7 +125,7 @@
         }
     };
 
-    $.fn.setFieldError = function(name, msg) {
+    $.fn.setFieldError = function (name, msg) {
         $(this).applyErrors({
             errors: [{
                 fieldName: name,
@@ -135,9 +134,9 @@
         });
     };
 
-    $.fn.serializeMap = function() {
+    $.fn.serializeMap = function () {
         var o = {};
-        $.each($(this).serializeArray(), function(i, e) {
+        $.each($(this).serializeArray(), function (i, e) {
             o[e.name] = e.value;
         });
         return o;
@@ -156,17 +155,17 @@
             $.extend(o.messages, $.ss.validation.messages);
         }
 
-        var filter = $.proxy(o.errorFilter, o), 
+        var filter = $.proxy(o.errorFilter, o),
             errors = status.errors;
 
         if (errors && errors.length) {
-            var fieldMap = { }, fieldLabelMap = {};
-            this.find("input,textarea,select,button").each(function() {
+            var fieldMap = {}, fieldLabelMap = {};
+            this.find("input,textarea,select,button").each(function () {
                 var $el = $(this);
                 var $prev = $el.prev(), $next = $el.next();
                 var fieldId = this.id || $el.attr("name");
                 if (!fieldId) return;
-                
+
                 var key = (fieldId).toLowerCase();
 
                 fieldMap[key] = $el;
@@ -176,7 +175,7 @@
                     fieldLabelMap[key] = $next;
                 }
             });
-            this.find(".help-inline[data-for],.help-block[data-for]").each(function() {
+            this.find(".help-inline[data-for],.help-block[data-for]").each(function () {
                 var $el = $(this);
                 var key = $el.data("for").toLowerCase();
                 fieldLabelMap[key] = $el;
@@ -203,7 +202,7 @@
         return this;
     };
 
-    $.fn.clearErrors = function() {
+    $.fn.clearErrors = function () {
         this.removeClass("has-errors");
         this.find(".error-summary").html("").hide();
         this.find(".help-inline.error, .help-block.error").each(function () {
@@ -216,7 +215,7 @@
             $(this).removeClass("has-error");
         });
     };
-    
+
     $.fn.bindForm = function (orig) {
         return this.each(function () {
             var f = $(this);
@@ -344,7 +343,7 @@
             $el.on($.ss.listenOn, $.ss.__call);
         });
     };
-    
+
     $.fn.setActiveLinks = function () {
         var url = window.location.href;
         return this.each(function () {
@@ -357,7 +356,7 @@
     };
 
     $.ss.eventReceivers = {};
-    $.ss.reconnectServerEvents = function(opt) {
+    $.ss.reconnectServerEvents = function (opt) {
         opt = opt || {};
         var hold = $.ss.eventSource;
         var es = new EventSource(opt.url || hold.url);
@@ -400,12 +399,12 @@
                 throw "invalid selector format: " + selector;
 
             var op = parts[0],
-                target = parts[1].replace(new RegExp("%20",'g')," ");
+                target = parts[1].replace(new RegExp("%20", 'g'), " ");
 
             if (opt.validate && opt.validate(op, target, msg, json) === false)
                 return;
 
-            var tokens = $.ss.splitOnFirst(target, '$'), 
+            var tokens = $.ss.splitOnFirst(target, '$'),
                 cmd = tokens[0], cssSel = tokens[1],
                 $els = cssSel && $(cssSel), el = $els && $els[0];
             if (op == "cmd") {
@@ -429,16 +428,16 @@
                                 url: opt.heartbeatUrl,
                                 data: null,
                                 dataType: "text",
-                                success: function(r) {},
+                                success: function (r) { },
                                 error: function () {
-                                    $.ss.reconnectServerEvents({errorArgs:arguments});
+                                    $.ss.reconnectServerEvents({ errorArgs: arguments });
                                 }
                             });
                         }, parseInt(opt.heartbeatIntervalMs) || 10000);
                     }
                     if (opt.unRegisterUrl) {
                         $(window).unload(function () {
-                            $.post(opt.unRegisterUrl, null, function(r) {});
+                            $.post(opt.unRegisterUrl, null, function (r) { });
                         });
                     }
                 }
