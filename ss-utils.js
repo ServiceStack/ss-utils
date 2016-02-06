@@ -1,6 +1,5 @@
 ;(function (root, f) {
     if (typeof define === "function" && define.amd) {
-        // AMD. Register as an anonymous module.
         define(["jquery"], f);
     } else if (typeof exports === "object") {
         module.exports = f(require("jquery"));
@@ -87,7 +86,6 @@
         }
         return url;
     };
-
     function splitCase(t) {
         return typeof t != 'string' ? t : t.replace(/([A-Z]|[0-9]+)/g, ' $1').replace(/_/g, ' ');
     };
@@ -96,7 +94,6 @@
     function toCamelCase(key) {
         return !key ? key : key.charAt(0).toLowerCase() + key.substring(1);
     }
-
     function sanitize(status) {
         if (status["errors"])
             return status;
@@ -124,6 +121,13 @@
             };
         }
     };
+    $.ss.postJSON = function (url, data, success, error) {
+        return $.ajax({
+            type: "POST", url: url, dataType: "json", contentType: "application/json",
+            data: typeof data == "string" ? data : JSON.stringify(data),
+            success: success, error: error
+        });
+    };
 
     $.fn.setFieldError = function (name, msg) {
         $(this).applyErrors({
@@ -133,7 +137,6 @@
             }]
         });
     };
-
     $.fn.serializeMap = function () {
         var o = {};
         $.each($(this).serializeArray(), function (i, e) {
@@ -141,7 +144,6 @@
         });
         return o;
     };
-
     $.fn.applyErrors = function (status, opt) {
         this.clearErrors();
         if (!status) return this;
@@ -201,7 +203,6 @@
         }
         return this;
     };
-
     $.fn.clearErrors = function () {
         this.removeClass("has-errors");
         this.find(".error-summary").html("").hide();
@@ -215,7 +216,6 @@
             $(this).removeClass("has-error");
         });
     };
-
     $.fn.bindForm = function (orig) {
         return this.each(function () {
             var f = $(this);
@@ -225,7 +225,6 @@
             });
         });
     };
-
     $.fn.ajaxSubmit = function (orig) {
         orig = orig || {};
         if (orig.validation) {
@@ -289,7 +288,6 @@
             return false;
         });
     };
-
     $.fn.applyValues = function (map) {
         return this.each(function () {
             var $el = $(this);
@@ -356,10 +354,45 @@
     };
 
     $.ss.eventReceivers = {};
+    $.ss.eventChannels = [];
+    $.ss.eventSourceUrl = null;
+    $.ss.updateSubscriberUrl = null;
+    $.ss.updateChannels = function(channels) {
+        $.ss.eventChannels = channels;
+        if (!$.ss.eventSource) return;
+        var url = $.ss.eventSource.url;
+        $.ss.eventSourceUrl = url.substring(0, Math.min(url.indexOf('?'), url.length)) + "?channels=" + channels.join(',');
+    };
+    $.ss.subscribeToChannels = function (channels, cb, cbError) {
+        return $.ss.updateSubscriber({ SubscribeChannels: channels.join(',') }, cb, cbError);
+    };
+    $.ss.unsubscribeFromChannels = function (channels, cb, cbError) {
+        return $.ss.updateSubscriber({ UnsubscribeChannels: channels.join(',') }, cb, cbError);
+    };
+    $.ss.updateSubscriber = function (data, cb, cbError) {
+        if (!$.ss.updateSubscriberUrl)
+            throw new Error("updateSubscriberUrl was not populated");
+        return $.ajax({
+            type: "POST",
+            url: $.ss.updateSubscriberUrl,
+            data: data,
+            dataType: "json",
+            success: function(r) {
+                $.ss.updateChannels((r.channels || '').split(','));
+                if (cb != null)
+                    cb(r);
+            },
+            error: function(e) {
+                $.ss.reconnectServerEvents({ errorArgs: arguments });
+                if (cbError != null)
+                    cbError(e);
+            }
+        });
+    };
     $.ss.reconnectServerEvents = function (opt) {
         opt = opt || {};
         var hold = $.ss.eventSource;
-        var es = new EventSource(opt.url || hold.url);
+        var es = new EventSource(opt.url || $.ss.eventSourceUrl || hold.url);
         es.onerror = opt.onerror || hold.onerror;
         es.onmessage = opt.onmessage || hold.onmessage;
         var fn = $.ss.handlers["onReconnect"];
@@ -440,6 +473,8 @@
                             $.post(opt.unRegisterUrl, null, function (r) { });
                         });
                     }
+                    $.ss.updateSubscriberUrl = opt.updateSubscriberUrl;
+                    $.ss.updateChannels((opt.channels || "").split(','));
                 }
                 var fn = $.ss.handlers[cmd];
                 if (fn) {
