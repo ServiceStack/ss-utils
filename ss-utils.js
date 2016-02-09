@@ -363,6 +363,26 @@
         var url = $.ss.eventSource.url;
         $.ss.eventSourceUrl = url.substring(0, Math.min(url.indexOf('?'), url.length)) + "?channels=" + channels.join(',');
     };
+    $.ss.updateSubscriberInfo = function (subscribe, unsubscribe) {
+        var sub = typeof subscribe == "string" ? subscribe.split(',') : subscribe;
+        var unsub = typeof unsubscribe == "string" ? unsubscribe.split(',') : unsubscribe;
+        var channels = [];
+        for (var i in $.ss.eventChannels) {
+            var c = $.ss.eventChannels[i];
+            if (unsub == null || $.inArray(c, unsub) === -1) {
+                channels.push(c);
+            }
+        }
+        if (sub) {
+            for (var i in sub) {
+                var c = sub[i];
+                if ($.inArray(c, channels) === -1) {
+                    channels.push(c);
+                }
+            }
+        }
+        $.ss.updateChannels(channels);
+    };
     $.ss.subscribeToChannels = function (channels, cb, cbError) {
         return $.ss.updateSubscriber({ SubscribeChannels: channels.join(',') }, cb, cbError);
     };
@@ -377,12 +397,13 @@
             url: $.ss.updateSubscriberUrl,
             data: data,
             dataType: "json",
-            success: function(r) {
-                $.ss.updateChannels((r.channels || '').split(','));
+            success: function (r) {
+                $.ss.updateSubscriberInfo(data.SubscribeChannels, data.UnsubscribeChannels);
+                r.channels = $.ss.eventChannels;
                 if (cb != null)
                     cb(r);
             },
-            error: function(e) {
+            error: function (e) {
                 $.ss.reconnectServerEvents({ errorArgs: arguments });
                 if (cbError != null)
                     cbError(e);
