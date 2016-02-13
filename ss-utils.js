@@ -44,6 +44,24 @@
             : document.selection && document.selection.type != "Control"
                 ? document.selection.createRange().text : "";
     };
+    $.ss.combinePaths = function() {
+        var parts = [], i, l;
+        for (i = 0, l = arguments.length; i < l; i++) {
+            var arg = arguments[i];
+            parts = arg.indexOf("://") === -1
+                ? parts.concat(arg.split("/"))
+                : parts.concat(arg.lastIndexOf("/") === arg.length-1 ? arg.substring(0, arg.length-1) : arg);
+        }
+        var paths = [];
+        for (i = 0, l = parts.length; i < l; i++) {
+            var part = parts[i];
+            if (!part || part === ".") continue;
+            if (part === "..") paths.pop();
+            else paths.push(part);
+        }
+        if (parts[0] === "") paths.unshift("");
+        return paths.join("/") || (paths.length ? "/" : ".");
+    };
     $.ss.queryString = function (url) {
         if (!url) return {};
         var pairs = $.ss.splitOnFirst(url, '?')[1].split('&');
@@ -63,8 +81,7 @@
         }
         return o;
     };
-    $.ss.createUrl = function (route, args) {
-        if (!args) args = {};
+    $.ss.createPath = function (route, args) {
         var argKeys = {};
         for (var k in args) {
             argKeys[k.toLowerCase()] = k;
@@ -83,6 +100,14 @@
             }
             if (url.length > 0) url += '/';
             url += p;
+        }
+        return url;
+    };
+    $.ss.createUrl = function(route, args) {
+        var url = $.ss.createPath(route, args);
+        for (var k in args) {
+            url += url.indexOf('?') >= 0 ? '&' : '?';
+            url += k + "=" + encodeURIComponent(args[k]);
         }
         return url;
     };
