@@ -1,0 +1,7 @@
+{
+  "name": "ss-utils",
+  "main": "ss-utils.d.ts",
+  "dependencies": {
+      "jquery": "github:DefinitelyTyped/DefinitelyTyped/jquery/jquery.d.ts#85af69c91599a6c904618545f0613970e1ff3f64"
+  }
+}
