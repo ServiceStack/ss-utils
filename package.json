@@ -6,6 +6,11 @@
   "homepage": "https://github.com/ServiceStack/ss-utils",
   "bugs": "https://github.com/ServiceStack/Issues",
   "main": "ss-utils.js",
+  "types": "ss-utils.d.ts",
+  "files": [
+    "ss-utils.js",
+    "ss-utils.d.ts"
+  ],
   "author": {
     "name": "Service Stack",
     "email": "team@servicestack.net",
