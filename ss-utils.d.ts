@@ -3,8 +3,6 @@
 // Definitions by: Demis Bellot <https://github.com/mythz/>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
-/// <reference path="../jquery/jquery.d.ts" />
-
 declare namespace ssutils {
 
     interface Static {
