@@ -35,7 +35,7 @@
     function pad(d) { return d < 10 ? '0' + d : d; };
     $.ss.dfmt = function (d) { return d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate()); };
     $.ss.dfmthm = function (d) { return d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ":" + pad(d.getMinutes()); };
-    $.ss.tfmt12 = function (d) { return pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()) + " " + (d.getHours() > 12 ? "PM" : "AM"); };
+    $.ss.tfmt12 = function (d) { return pad((d.getHours() + 24) % 12 || 12) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()) + " " + (d.getHours() > 12 ? "PM" : "AM"); };
     $.ss.splitOnFirst = function (s, c) { if (!s) return [s]; var pos = s.indexOf(c); return pos >= 0 ? [s.substring(0, pos), s.substring(pos + 1)] : [s]; };
     $.ss.splitOnLast = function (s, c) { if (!s) return [s]; var pos = s.lastIndexOf(c); return pos >= 0 ? [s.substring(0, pos), s.substring(pos + 1)] : [s]; };
     $.ss.getSelection = function () {
@@ -481,7 +481,7 @@
         $.ss.eventSource = this[0];
         $.ss.eventOptions = opt = opt || {};
         if (opt.handlers) {
-            $.extend($.ss.handlers, opt.handlers);
+            $.extend($.ss.handlers, opt.handlers || {});
         }
         function onMessage(e) {
             var parts = $.ss.splitOnFirst(e.data, ' ');
@@ -507,15 +507,17 @@
             var tokens = $.ss.splitOnFirst(target, '$'),
                 cmd = tokens[0], cssSel = tokens[1],
                 $els = cssSel && $(cssSel), el = $els && $els[0];
-            if (op == "cmd") {
-                if (cmd == "onConnect") {
+
+            $.extend(e, { cmd: cmd, op: op, selector: selector, target: target, cssSelector: cssSel, json: json });
+            if (op === "cmd") {
+                if (cmd === "onConnect") {
                     $.extend(opt, msg);
                     if (opt.heartbeatUrl) {
                         if (opt.heartbeat) {
                             window.clearInterval(opt.heartbeat);
                         }
                         opt.heartbeat = window.setInterval(function () {
-                            if ($.ss.eventSource.readyState == 2) //CLOSED
+                            if ($.ss.eventSource.readyState === 2) //CLOSED
                             {
                                 window.clearInterval(opt.heartbeat);
                                 var stopFn = $.ss.handlers["onStop"];
@@ -537,7 +539,7 @@
                         }, parseInt(opt.heartbeatIntervalMs) || 10000);
                     }
                     if (opt.unRegisterUrl) {
-                        $(window).unload(function () {
+                        $(window).on("unload", function () {
                             $.post(opt.unRegisterUrl, null, function (r) { });
                         });
                     }
@@ -549,10 +551,10 @@
                     fn.call(el || document.body, msg, e);
                 }
             }
-            else if (op == "trigger") {
+            else if (op === "trigger") {
                 $(el || document).trigger(cmd, [msg, e]);
             }
-            else if (op == "css") {
+            else if (op === "css") {
                 $($els || document.body).css(cmd, msg, e);
             }
             else {
@@ -560,10 +562,22 @@
                 $.ss.invokeReceiver(r, cmd, el, msg, e, op);
             }
 
-            if (opt.success) {
-                opt.success(selector, msg, e);
-            }
+            var fn = $.ss.handlers["onMessage"];
+            if (fn) fn.cal(el || document.body, msg, e);
+
+            if (opt.success) opt.success(selector, msg, e); //deprecated
         }
+
         $.ss.eventSource.onmessage = onMessage;
+
+        var hold = $.ss.eventSource.onerror;
+        $.ss.eventSource.onerror = function () {
+            var args = arguments;
+            window.setTimeout(function () {
+                $.ss.reconnectServerEvents({ errorArgs: args });
+                if (hold)
+                    hold.apply(args);
+            }, 10000);
+        };
     };
 });
