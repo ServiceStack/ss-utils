@@ -210,28 +210,31 @@
         if (errorMsg) {
             var isCheck = this.type === "checkbox" || this.type === "radio" || hasClass(this, 'form-check');
             var elFormCheck = isCheck ? parent(this,'form-check') : null;
+            var elInputGroup = parent(this,'input-group');
             if (!isCheck)
                 addClass(this, 'is-invalid');
             else
                 addClass(elFormCheck || this.parentElement, 'is-invalid form-control');
 
             var elNext = this.nextElementSibling;
-            var elLast = elNext && (elNext.getAttribute('for') === this.id || elNext.tagName === "SMALL")
-                ? (isCheck ? elFormCheck || elNext.parentElement : elNext)
-                : this;
+            var elLast = elInputGroup ? elInputGroup.lastElementChild : 
+                (elNext && (elNext.getAttribute('for') === this.id || elNext.tagName === "SMALL")
+                    ? (isCheck ? elFormCheck || elNext.parentElement : elNext)
+                    : this);
             var elError = elLast.nextElementSibling && hasClass(elLast.nextElementSibling, 'invalid-feedback')
                 ? elLast.nextElementSibling
-                : $.ss.createElement("div", { insertAfter:elLast }, { className: 'invalid-feedback' });
+                : (elInputGroup && elInputGroup.querySelector('.invalid-feedback')) 
+                  || $.ss.createElement("div", { insertAfter:elLast }, { className: 'invalid-feedback' });
             elError.innerHTML = errorMsg;
         }
     };
     function parent(el,cls) {
-        while (!hasClass(el,cls))
+        while (el && !hasClass(el,cls))
             el = el.parentElement;
         return el;
     }
     function hasClass(el, cls) {
-        return (" " + el.className + " ").replace(/[\n\t\r]/g, " ").indexOf(" " + cls + " ") > -1;
+        return el && (" " + el.className + " ").replace(/[\n\t\r]/g, " ").indexOf(" " + cls + " ") > -1;
     }
     function addClass(el, cls) {
         if (!hasClass(el, cls)) el.className = (el.className + " " + cls).trim();
@@ -300,7 +303,7 @@
                 var $el = $(this);
                 var $prev = $el.prev(), $next = $el.next();
                 var isCheck = this.type === "radio" || this.type === "checkbox";
-                var fieldId = (!isCheck ? this.id : null) || $el.attr("name");
+                var fieldId = $el.attr("name") || this.id;
                 if (!fieldId) return;
 
                 var key = (fieldId).toLowerCase();
@@ -379,7 +382,7 @@
     $.fn.bindForm = function (orig) { //bootstrap v3
         return this.each(function () {
             var f = $(this);
-            if (orig.model)
+            if (orig && orig.model)
                 $.ss.populateForm(this,orig.model);
             f.submit(function (e) {
                 e.preventDefault();
@@ -514,7 +517,7 @@
             }
         }
     };
-    $.ss.listenOn = 'click dblclick change focus blur focusin focusout select keydown keypress keyup hover toggle';
+    $.ss.listenOn = 'click dblclick change focus blur focusin focusout select keydown keypress keyup hover toggle input';
     $.fn.bindHandlers = function (handlers) {
         $.extend($.ss.handlers, handlers || {});
         return this.each(function () {
@@ -768,3 +771,21 @@
         };
     };
 });
+function reset() {
+    $.ss.eventSourceStop = false;
+    $.ss.eventOptions = {};
+    $.ss.eventReceivers = {};
+    $.ss.eventChannels = [];
+    $.ss.eventSourceUrl = $.ss.updateSubscriberUrl = $.ss.eventOptions = $.ss.eventSource = null;
+}
+$.ss.disposeServerEvents = function (cb) {
+  var unRegisterUrl = $.ss.eventOptions && $.ss.eventOptions.unRegisterUrl;
+  if ($.ss.eventSource) $.ss.eventSource.close();
+  reset();
+
+  if (unRegisterUrl) {
+      $.ajax({ type: 'POST', url: unRegisterUrl, complete: function() { if (cb) cb(); } });
+  } else {
+      if (cb) cb();
+  }
+};
