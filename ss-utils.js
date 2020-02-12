@@ -629,7 +629,7 @@
             throw new Error("updateSubscriberUrl was not populated");
         return $.ajax({
             type: "POST",
-            url: $.ss.updateSubscriberUrl,
+            url: `${$.ss.updateSubscriberUrl}/${$.ss.eventOptions.id}`,
             data: data,
             dataType: "json",
             success: function (r) {
